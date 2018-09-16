@@ -1,0 +1,64 @@
+[comment encoding = UTF-8 /]
+[module generatePackage('http://www.eclipse.org/emf/2002/Ecore')]
+
+[template public generatePackage(anEPackage : EPackage)]
+[comment @main/]
+[file (anEPackage.name.concat('.cto'), false, 'UTF-8')]
+namespace [anEPackage.name/]
+
+[for (aEnum: EDataType | anEPackage.eClassifiers->filter(EDataType)) separator('\n')]
+[generateEnum(aEnum)/]
+[/for]
+
+[for (aClass: EClass | anEPackage.eClassifiers->filter(EClass)) separator('\n')]
+[generateClass(aClass)/]
+[/for]
+
+[/file]
+[/template]
+
+[template public generateClass(aClass : EClass)]
+/**
+ * [aClass.eAnnotations.details->select(a | a.key = 'documentation').value/]
+ */
+[if (aClass.abstract)]abstract [/if]concept [if (aClass.name='Asset')]AAsset[else][aClass.name/][/if] [if (aClass.eSuperTypes->size()>0)] extends [if (aClass.eSuperTypes->exists(name='Asset'))]AAsset[else][aClass.eSuperTypes.name/][/if][/if] {
+[for (anAttribute: EAttribute | aClass.eStructuralFeatures->filter(EAttribute)) separator('\n')][generateAttribute(anAttribute)/][/for]
+}
+[/template]
+
+[template public generateAttribute(anAttribute : EAttribute)]
+o [if (anAttribute.eType.instanceClassName = 'java.lang.String')]String
+[elseif (anAttribute.eType.name = 'java.math.BigDecimal')]Double
+[elseif (anAttribute.eType.name = 'UnadjustedDate')]DateTime
+[elseif (anAttribute.eType.name = 'Date')]DateTime
+[elseif (anAttribute.eType.name = 'Decimal')]Double
+[elseif (anAttribute.eType.name = 'PositiveInteger')]Integer
+[elseif (anAttribute.eType.name = 'PositiveDecimal')]Double
+[elseif (anAttribute.eType.name = 'NonNegativeInteger')]Integer
+[elseif (anAttribute.eType.name = 'NonNegativeDecimal')]Double
+[elseif (anAttribute.eType.name = 'EFeatureMapEntry')]String
+[elseif (anAttribute.eType.name = 'HexBinary')]String
+[elseif (anAttribute.eType.name = 'Base64Binary')]String
+[elseif (anAttribute.eType.name = 'RestrictedPercentage')]Double
+[elseif (anAttribute.eType.name = 'Boolean')]Boolean
+[elseif (anAttribute.eType.name = 'Integer')]Integer
+[elseif (anAttribute.eType.name = 'DateTime')]DateTime
+[elseif (anAttribute.eType.name = 'GYearMonth')]DateTime
+[elseif (anAttribute.eType.name = 'GYear')]DateTime
+[elseif (anAttribute.eType.name = 'Time')]DateTime
+[elseif (anAttribute.eType.name = 'AnySimpleType')]String
+[elseif (anAttribute.eType.name = 'Asset')]AAsset
+[else][anAttribute.eType.name/][/if] [if (anAttribute.upperBound <> 1)]['['']'/][/if] [anAttribute.name/] [if (anAttribute.lowerBound < 1)]optional[/if]
+[/template]
+
+[template public generateEnum(aEnum : EDataType)]
+/**
+ * [aEnum.eAnnotations.details->select(a | a.key = 'documentation').value/]
+ */
+enum [aEnum.name/] {
+[if oclIsKindOf(EEnum)]
+[for (anEnumLiteral: EEnumLiteral | oclAsType(EEnum).eLiterals) separator('\n')]
+o [anEnumLiteral.name/][/for]
+[/if]
+}
+[/template]
